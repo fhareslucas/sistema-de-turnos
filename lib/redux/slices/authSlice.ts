@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { api } from "@/services/api";
-import { User, LoginCredentials, AuthResponse } from "@/types";
+import { User, LoginCredentials, AuthResponse, ApiResponse } from "@/types";
 import axios from "axios";
 
 interface AuthState {
@@ -24,8 +24,11 @@ export const login = createAsyncThunk(
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
       const response = await api.post<AuthResponse>("/auth/login", credentials);
-      localStorage.setItem("token", response.data.data.token);
-      return response.data.data;
+      if (response.data.success && response.data.data) {
+        localStorage.setItem("token", response.data.data.token);
+        return response.data.data;
+      }
+      return rejectWithValue(response.data.message || "Error al iniciar sesión");
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(
@@ -41,8 +44,11 @@ export const getProfile = createAsyncThunk(
   "auth/getProfile",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get("/auth/profile");
-      return response.data.data;
+      const response = await api.get<ApiResponse<User>>("/auth/profile");
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      return rejectWithValue(response.data.message || "Error al obtener perfil");
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(

@@ -101,6 +101,7 @@ export interface CreateMesaData {
   numero: number;
   nombre: string;
   estado?: "disponible" | "ocupada" | "inactiva";
+  activo?: boolean;
 }
 
 export interface UpdateMesaData extends Partial<CreateMesaData> {

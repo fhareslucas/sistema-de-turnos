@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { api } from "@/services/api";
-import { TipoServicio, CreateServicioData, UpdateServicioData } from "@/types";
+import { TipoServicio, CreateServicioData, UpdateServicioData, ApiResponse } from "@/types";
 
 interface ServiciosState {
   servicios: TipoServicio[];
@@ -16,33 +16,78 @@ const initialState: ServiciosState = {
 
 export const fetchServicios = createAsyncThunk(
   "servicios/fetchServicios",
-  async () => {
-    const response = await api.get("/servicios");
-    return response.data.data;
+  async (params?: { activo?: boolean }, { rejectWithValue }) => {
+    try {
+      // Filtrar parámetros undefined para evitar errores 400
+      const cleanParams = params ? Object.fromEntries(
+        Object.entries(params).filter(([_, value]) => value !== undefined && value !== null && value !== '')
+      ) : {};
+      
+      const response = await api.get<ApiResponse<TipoServicio[]>>("/servicios", { params: cleanParams });
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      return rejectWithValue(response.data.message || "Error al cargar servicios");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message || "Error al cargar servicios");
+      }
+      return rejectWithValue("Error al cargar servicios");
+    }
   }
 );
 
 export const createServicio = createAsyncThunk(
   "servicios/createServicio",
-  async (data: CreateServicioData) => {
-    const response = await api.post("/servicios", data);
-    return response.data.data;
+  async (data: CreateServicioData, { rejectWithValue }) => {
+    try {
+      const response = await api.post<ApiResponse<TipoServicio>>("/servicios", data);
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      return rejectWithValue(response.data.message || "Error al crear servicio");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message || "Error al crear servicio");
+      }
+      return rejectWithValue("Error al crear servicio");
+    }
   }
 );
 
 export const updateServicio = createAsyncThunk(
   "servicios/updateServicio",
-  async ({ id, data }: { id: string; data: UpdateServicioData }) => {
-    const response = await api.put(`/servicios/${id}`, data);
-    return response.data.data;
+  async ({ id, data }: { id: string; data: UpdateServicioData }, { rejectWithValue }) => {
+    try {
+      const response = await api.put<ApiResponse<TipoServicio>>(`/servicios/${id}`, data);
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
+      return rejectWithValue(response.data.message || "Error al actualizar servicio");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message || "Error al actualizar servicio");
+      }
+      return rejectWithValue("Error al actualizar servicio");
+    }
   }
 );
 
 export const deleteServicio = createAsyncThunk(
   "servicios/deleteServicio",
-  async (id: string) => {
-    await api.delete(`/servicios/${id}`);
-    return id;
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await api.delete<ApiResponse>(`/servicios/${id}`);
+      if (response.data.success) {
+        return id;
+      }
+      return rejectWithValue(response.data.message || "Error al eliminar servicio");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message || "Error al eliminar servicio");
+      }
+      return rejectWithValue("Error al eliminar servicio");
+    }
   }
 );
 
@@ -59,10 +104,26 @@ const serviciosSlice = createSlice({
         state.loading = false;
         state.servicios = action.payload;
       })
+      .addCase(fetchServicios.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(createServicio.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(createServicio.fulfilled, (state, action) => {
+        state.loading = false;
         state.servicios.push(action.payload);
       })
+      .addCase(createServicio.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateServicio.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(updateServicio.fulfilled, (state, action) => {
+        state.loading = false;
         const index = state.servicios.findIndex(
           (s) => s.id === action.payload.id
         );
@@ -70,10 +131,22 @@ const serviciosSlice = createSlice({
           state.servicios[index] = action.payload;
         }
       })
+      .addCase(updateServicio.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(deleteServicio.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(deleteServicio.fulfilled, (state, action) => {
+        state.loading = false;
         state.servicios = state.servicios.filter(
           (s) => s.id !== action.payload
         );
+      })
+      .addCase(deleteServicio.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

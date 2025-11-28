@@ -47,7 +47,7 @@ export default function TurnosPage() {
   });
 
   useEffect(() => {
-    dispatch(fetchTurnos({}));
+    dispatch(fetchTurnos());
     dispatch(fetchServicios());
     dispatch(fetchMesas());
   }, [dispatch]);
@@ -61,7 +61,7 @@ export default function TurnosPage() {
     );
     setShowCreateModal(false);
     reset();
-    dispatch(fetchTurnos({}));
+    dispatch(fetchTurnos());
   };
 
   const handleLlamarTurno = async () => {
@@ -72,18 +72,18 @@ export default function TurnosPage() {
       setShowLlamarModal(false);
       setSelectedTurno(null);
       setSelectedMesaId("");
-      dispatch(fetchTurnos({}));
+      dispatch(fetchTurnos());
     }
   };
 
   const handleCompletarTurno = async (id: string) => {
     await dispatch(completarTurno({ id }));
-    dispatch(fetchTurnos({}));
+    dispatch(fetchTurnos());
   };
 
   const handleCancelarTurno = async (id: string) => {
     await dispatch(cancelarTurno({ id }));
-    dispatch(fetchTurnos({}));
+    dispatch(fetchTurnos());
   };
 
   const filteredTurnos = filtroEstado
