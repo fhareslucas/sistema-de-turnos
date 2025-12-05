@@ -71,7 +71,6 @@ export default function CreateTurnoModal({
       if (createTurno.fulfilled.match(resultAction)) {
         const newTurno = resultAction.payload;
 
-        // Solo llamar turno si hay una mesa seleccionada Y está disponible
         if (
           selectedMesaId &&
           availableMesas.some((m) => m.id === selectedMesaId)
@@ -83,7 +82,6 @@ export default function CreateTurnoModal({
             })
           );
         }
-        // Si no hay mesa seleccionada o no está disponible, el turno queda en espera automáticamente
 
         dispatch(fetchTurnos());
         onOpenChange(false);
@@ -95,7 +93,6 @@ export default function CreateTurnoModal({
     }
   };
 
-  // Filtrar solo mesas disponibles
   const availableMesas = mesas.filter(
     (m) => m.activo && m.estado === "disponible"
   );

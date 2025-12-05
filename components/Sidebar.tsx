@@ -115,7 +115,6 @@ export default function Sidebar() {
         </Button>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 py-6 px-2 space-y-1 overflow-y-auto">
         {menuItems.map((item) => (
           <SidebarItem

@@ -58,41 +58,39 @@ export default function TurnosPage() {
       setSelectedTurno(null);
       setSelectedMesaId("");
       dispatch(fetchTurnos());
+      dispatch(fetchMesas());
     }
   };
 
   const handleCompletarTurno = async (id: string) => {
     await dispatch(completarTurno({ id }));
     dispatch(fetchTurnos());
+    dispatch(fetchMesas());
   };
 
   const handleCancelarTurno = async (id: string) => {
     await dispatch(cancelarTurno({ id }));
     dispatch(fetchTurnos());
+    dispatch(fetchMesas());
   };
 
-  // Ordenar turnos: en_espera y en_atencion primero, completados y cancelados al final
   const sortedTurnos = useMemo(() => {
     const turnosCopy = [...turnos];
 
     return turnosCopy.sort((a, b) => {
-      // Criterio de orden de prioridad
-      const estadoPrioridad: Record<string, number> = {
-        en_espera: 1,
-        en_atencion: 2,
-        completado: 3,
-        cancelado: 4,
-      };
+      const esActivoA = a.estado === "en_espera" || a.estado === "en_atencion";
+      const esActivoB = b.estado === "en_espera" || b.estado === "en_atencion";
 
-      const prioridadA = estadoPrioridad[a.estado] || 5;
-      const prioridadB = estadoPrioridad[b.estado] || 5;
+      if (esActivoA && !esActivoB) return -1;
+      if (!esActivoA && esActivoB) return 1;
 
-      // Primero ordenar por estado
-      if (prioridadA !== prioridadB) {
-        return prioridadA - prioridadB;
+      if (esActivoA && esActivoB) {
+        if (a.prioridad && !b.prioridad) return -1;
+        if (!a.prioridad && b.prioridad) return 1;
+        if (a.estado === "en_atencion" && b.estado === "en_espera") return -1;
+        if (a.estado === "en_espera" && b.estado === "en_atencion") return 1;
       }
 
-      // Dentro del mismo estado, más recientes primero
       return (
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -103,7 +101,6 @@ export default function TurnosPage() {
     ? sortedTurnos.filter((t) => t.estado === filtroEstado)
     : sortedTurnos;
 
-  // Cálculos de paginación
   const totalPages = Math.ceil(filteredTurnos.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -123,10 +120,9 @@ export default function TurnosPage() {
 
   const handleFiltroChange = (estado: string) => {
     setFiltroEstado(estado);
-    setCurrentPage(1); // Reset a página 1 cuando cambia el filtro
+    setCurrentPage(1);
   };
 
-  // Generar array de números de página para mostrar
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     const maxVisiblePages = 5;
@@ -135,24 +131,19 @@ export default function TurnosPage() {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
 
-    // Mostrar primeras páginas
     if (currentPage <= 3) {
       for (let i = 1; i <= 4; i++) {
         pages.push(i);
       }
       pages.push("...");
       pages.push(totalPages);
-    }
-    // Mostrar últimas páginas
-    else if (currentPage >= totalPages - 2) {
+    } else if (currentPage >= totalPages - 2) {
       pages.push(1);
       pages.push("...");
       for (let i = totalPages - 3; i <= totalPages; i++) {
         pages.push(i);
       }
-    }
-    // Mostrar páginas del medio
-    else {
+    } else {
       pages.push(1);
       pages.push("...");
       for (let i = currentPage - 1; i <= currentPage + 1; i++) {
@@ -322,7 +313,6 @@ export default function TurnosPage() {
         )}
       </div>
 
-      {/* Controles de Paginación */}
       {totalPages > 1 && (
         <Card>
           <CardContent className="pt-6">
@@ -388,38 +378,48 @@ export default function TurnosPage() {
         </Card>
       )}
 
-      {/* Modal Crear Turno */}
       <CreateTurnoModal
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
       />
 
-      {/* Modal Llamar Turno */}
       {showLlamarModal && selectedTurno && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md shadow-2xl border-2 bg-background">
             <CardHeader>
               <CardTitle>Llamar Turno {selectedTurno.codigo}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="mesa_select">Seleccionar Mesa *</Label>
-                <select
-                  id="mesa_select"
-                  value={selectedMesaId}
-                  onChange={(e) => setSelectedMesaId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">Seleccione una mesa</option>
-                  {mesas
-                    .filter((m) => m.activo && m.estado === "disponible")
-                    .map((mesa) => (
-                      <option key={mesa.id} value={mesa.id}>
-                        {mesa.nombre} (Mesa {mesa.numero})
-                      </option>
-                    ))}
-                </select>
-              </div>
+              {mesas.filter((m) => m.activo && m.estado === "disponible")
+                .length === 0 ? (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 text-center">
+                  <p className="text-yellow-800 font-medium">
+                    ⚠️ No hay mesas disponibles
+                  </p>
+                  <p className="text-yellow-600 text-sm mt-1">
+                    Todas las mesas están ocupadas en este momento
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="mesa_select">Seleccionar Mesa *</Label>
+                  <select
+                    id="mesa_select"
+                    value={selectedMesaId}
+                    onChange={(e) => setSelectedMesaId(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">Seleccione una mesa</option>
+                    {mesas
+                      .filter((m) => m.activo && m.estado === "disponible")
+                      .map((mesa) => (
+                        <option key={mesa.id} value={mesa.id}>
+                          {mesa.nombre} (Mesa {mesa.numero})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
 
               <div className="flex gap-2">
                 <Button

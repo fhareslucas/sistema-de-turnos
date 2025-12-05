@@ -1,51 +1,62 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '@/lib/redux/store';
-import { fetchEstadisticas, fetchTurnos } from '@/lib/redux/slices/turnosSlice';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, CheckCircle2, AlertCircle, Users } from 'lucide-react';
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/lib/redux/store";
+import { fetchEstadisticas, fetchTurnos } from "@/lib/redux/slices/turnosSlice";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Clock, CheckCircle2, AlertCircle, Users, User } from "lucide-react";
 
 export default function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { estadisticas, turnos, loading } = useSelector((state: RootState) => state.turnos);
+  const { estadisticas, turnos} = useSelector(
+    (state: RootState) => state.turnos
+  );
 
   useEffect(() => {
     dispatch(fetchEstadisticas());
-    dispatch(fetchTurnos({ estado: 'en_espera' }));
+    dispatch(fetchTurnos()); 
   }, [dispatch]);
 
   const stats = [
     {
-      title: 'En Espera',
+      title: "En Espera",
       value: estadisticas?.hoy.en_espera || 0,
       icon: Clock,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-50",
     },
     {
-      title: 'En Atención',
+      title: "En Atención",
       value: estadisticas?.hoy.en_atencion || 0,
       icon: AlertCircle,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
     },
     {
-      title: 'Completados',
+      title: "Completados",
       value: estadisticas?.hoy.completados || 0,
       icon: CheckCircle2,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
+      color: "text-green-600",
+      bgColor: "bg-green-50",
     },
     {
-      title: 'Total Hoy',
+      title: "Total Hoy",
       value: estadisticas?.hoy.total || 0,
       icon: Users,
-      color: 'text-primary-600',
-      bgColor: 'bg-primary-50',
+      color: "text-primary-600",
+      bgColor: "bg-primary-50",
     },
   ];
+
+  const turnosEnAtencion = turnos.filter((t) => t.estado === "en_atencion");
+  const turnosEnEspera = turnos.filter((t) => t.estado === "en_espera");
 
   return (
     <div className="space-y-8">
@@ -77,51 +88,138 @@ export default function DashboardPage() {
         })}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Turnos en Espera</CardTitle>
-          <CardDescription>
-            {turnos.filter(t => t.estado === 'en_espera').length} turnos esperando atención
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {turnos.filter(t => t.estado === 'en_espera').length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No hay turnos en espera
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {turnos
-                .filter(t => t.estado === 'en_espera')
-                .slice(0, 5)
-                .map((turno) => (
+      <div className="grid gap-6 md:grid-cols-2">
+
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-blue-600" />
+              Turnos Actuales
+            </CardTitle>
+            <CardDescription>
+              {turnosEnAtencion.length}{" "}
+              {turnosEnAtencion.length === 1 ? "turno" : "turnos"} siendo
+              atendido{turnosEnAtencion.length === 1 ? "" : "s"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1">
+            {turnosEnAtencion.length === 0 ? (
+              <div className="flex items-center justify-center h-full min-h-[200px] text-center py-8 text-muted-foreground">
+                <div>
+                  <AlertCircle className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                  <p>No hay turnos en atención</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {turnosEnAtencion.map((turno) => (
                   <div
                     key={turno.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                    className="flex items-center justify-between p-2.5 rounded-md border bg-blue-50/50 border-blue-200 hover:shadow-sm transition-shadow"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       <div
-                        className="h-10 w-10 rounded-full flex items-center justify-center font-bold text-white text-sm"
+                        className="h-9 w-9 rounded-md flex items-center justify-center font-bold text-white text-xs shadow-sm"
                         style={{ backgroundColor: turno.tipo_servicio?.color }}
                       >
                         {turno.tipo_servicio?.codigo}
                       </div>
                       <div>
-                        <p className="font-semibold">{turno.codigo}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-bold text-sm">{turno.codigo}</p>
+                        <p className="text-xs text-muted-foreground">
                           {turno.tipo_servicio?.nombre}
                         </p>
+                        {turno.nombre_cliente && (
+                          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <User className="h-2.5 w-2.5" />
+                            {turno.nombre_cliente}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(turno.created_at).toLocaleTimeString()}
-                    </p>
+                    <div className="text-right">
+                      {turno.mesa && (
+                        <p className="text-xs font-semibold text-blue-700">
+                          {turno.mesa.nombre}
+                        </p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(
+                          turno.hora_atencion || turno.created_at
+                        ).toLocaleTimeString()}
+                      </p>
+                    </div>
                   </div>
                 ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-yellow-600" />
+              Turnos en Espera
+            </CardTitle>
+            <CardDescription>
+              {turnosEnEspera.length}{" "}
+              {turnosEnEspera.length === 1 ? "turno" : "turnos"} esperando
+              atención
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1">
+            {turnosEnEspera.length === 0 ? (
+              <div className="flex items-center justify-center h-full min-h-[200px] text-center py-8 text-muted-foreground">
+                <div>
+                  <Clock className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                  <p>No hay turnos en espera</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {turnosEnEspera.slice(0, 10).map((turno) => (
+                  <div
+                    key={turno.id}
+                    className="flex items-center justify-between p-2.5 rounded-md border bg-yellow-50/50 border-yellow-200 hover:shadow-sm transition-shadow"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="h-9 w-9 rounded-md flex items-center justify-center font-bold text-white text-xs shadow-sm"
+                        style={{ backgroundColor: turno.tipo_servicio?.color }}
+                      >
+                        {turno.tipo_servicio?.codigo}
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm">{turno.codigo}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {turno.tipo_servicio?.nombre}
+                        </p>
+                        {turno.nombre_cliente && (
+                          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <User className="h-2.5 w-2.5" />
+                            {turno.nombre_cliente}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {turno.prioridad && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800 mb-1">
+                          Prioritario
+                        </span>
+                      )}
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(turno.created_at).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
