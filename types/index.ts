@@ -68,7 +68,7 @@ export interface Turno {
 export interface CreateTurnoData {
   tipo_servicio_id: string;
   nombre_cliente?: string;
-  prioridad?: boolean;
+  prioridad?: number | string;
   observaciones?: string;
 }
 

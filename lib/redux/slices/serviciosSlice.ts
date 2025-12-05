@@ -1,6 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { api } from "@/services/api";
-import { TipoServicio, CreateServicioData, UpdateServicioData, ApiResponse } from "@/types";
+import {
+  TipoServicio,
+  CreateServicioData,
+  UpdateServicioData,
+  ApiResponse,
+} from "@/types";
 
 interface ServiciosState {
   servicios: TipoServicio[];
@@ -16,18 +21,18 @@ const initialState: ServiciosState = {
 
 export const fetchServicios = createAsyncThunk(
   "servicios/fetchServicios",
-  async (params?: { activo?: boolean }, { rejectWithValue }) => {
+  async (params: { activo?: boolean } | undefined, { rejectWithValue }) => {
     try {
-      // Filtrar parámetros undefined para evitar errores 400
-      const cleanParams = params ? Object.fromEntries(
-        Object.entries(params).filter(([_, value]) => value !== undefined && value !== null && value !== '')
-      ) : {};
-      
-      const response = await api.get<ApiResponse<TipoServicio[]>>("/servicios", { params: cleanParams });
+      const response = await api.get<ApiResponse<TipoServicio[]>>(
+        "/servicios",
+        { params }
+      );
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
-      return rejectWithValue(response.data.message || "Error al cargar servicios");
+      return rejectWithValue(
+        response.data.message || "Error al cargar servicios"
+      );
     } catch (error: unknown) {
       if (error instanceof Error) {
         return rejectWithValue(error.message || "Error al cargar servicios");
@@ -41,11 +46,16 @@ export const createServicio = createAsyncThunk(
   "servicios/createServicio",
   async (data: CreateServicioData, { rejectWithValue }) => {
     try {
-      const response = await api.post<ApiResponse<TipoServicio>>("/servicios", data);
+      const response = await api.post<ApiResponse<TipoServicio>>(
+        "/servicios",
+        data
+      );
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
-      return rejectWithValue(response.data.message || "Error al crear servicio");
+      return rejectWithValue(
+        response.data.message || "Error al crear servicio"
+      );
     } catch (error: unknown) {
       if (error instanceof Error) {
         return rejectWithValue(error.message || "Error al crear servicio");
@@ -57,13 +67,21 @@ export const createServicio = createAsyncThunk(
 
 export const updateServicio = createAsyncThunk(
   "servicios/updateServicio",
-  async ({ id, data }: { id: string; data: UpdateServicioData }, { rejectWithValue }) => {
+  async (
+    { id, data }: { id: string; data: UpdateServicioData },
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await api.put<ApiResponse<TipoServicio>>(`/servicios/${id}`, data);
+      const response = await api.put<ApiResponse<TipoServicio>>(
+        `/servicios/${id}`,
+        data
+      );
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
-      return rejectWithValue(response.data.message || "Error al actualizar servicio");
+      return rejectWithValue(
+        response.data.message || "Error al actualizar servicio"
+      );
     } catch (error: unknown) {
       if (error instanceof Error) {
         return rejectWithValue(error.message || "Error al actualizar servicio");
@@ -81,7 +99,9 @@ export const deleteServicio = createAsyncThunk(
       if (response.data.success) {
         return id;
       }
-      return rejectWithValue(response.data.message || "Error al eliminar servicio");
+      return rejectWithValue(
+        response.data.message || "Error al eliminar servicio"
+      );
     } catch (error: unknown) {
       if (error instanceof Error) {
         return rejectWithValue(error.message || "Error al eliminar servicio");

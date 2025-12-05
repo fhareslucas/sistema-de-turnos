@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { api } from "@/services/api";
 import { User, LoginCredentials, AuthResponse, ApiResponse } from "@/types";
+import { setCookie, removeCookie } from "@/lib/cookieUtils";
 import axios from "axios";
 
 interface AuthState {
@@ -24,11 +25,27 @@ export const login = createAsyncThunk(
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
       const response = await api.post<AuthResponse>("/auth/login", credentials);
+
+      let token: string;
+      let user: User;
+
       if (response.data.success && response.data.data) {
-        localStorage.setItem("token", response.data.data.token);
-        return response.data.data;
+        token = response.data.data.token;
+        user = response.data.data.user;
+      } else if ("token" in response.data && "user" in response.data) {
+        const directResponse = response.data as unknown as {
+          token: string;
+          user: User;
+        };
+        token = directResponse.token;
+        user = directResponse.user;
+      } else {
+        return rejectWithValue("Formato de respuesta inválido");
       }
-      return rejectWithValue(response.data.message || "Error al iniciar sesión");
+      localStorage.setItem("token", token);
+      setCookie("token", token, 7); 
+
+      return { token, user };
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(
@@ -48,7 +65,9 @@ export const getProfile = createAsyncThunk(
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
-      return rejectWithValue(response.data.message || "Error al obtener perfil");
+      return rejectWithValue(
+        response.data.message || "Error al obtener perfil"
+      );
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(
@@ -69,6 +88,7 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       localStorage.removeItem("token");
+      removeCookie("token");
     },
     clearError: (state) => {
       state.error = null;
@@ -104,6 +124,7 @@ const authSlice = createSlice({
         state.token = null;
         state.isAuthenticated = false;
         localStorage.removeItem("token");
+        removeCookie("token");
       });
   },
 });

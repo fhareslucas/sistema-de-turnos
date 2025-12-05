@@ -1,34 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import { AppDispatch, RootState } from "@/lib/redux/store";
 import {
   fetchTurnos,
-  createTurno,
   llamarTurno,
   completarTurno,
   cancelarTurno,
 } from "@/lib/redux/slices/turnosSlice";
-import { fetchServicios } from "@/lib/redux/slices/serviciosSlice";
+
 import { fetchMesas } from "@/lib/redux/slices/mesasSlice";
-import {
-  createTurnoSchema,
-  type CreateTurnoFormData,
-} from "@/lib/validations/schemas";
+import CreateTurnoModal from "@/components/CreateTurnoModal";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Phone, CheckCircle, XCircle, User } from "lucide-react";
+import {
+  Plus,
+  Phone,
+  CheckCircle,
+  XCircle,
+  User,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Turno } from "@/types";
+import { fetchServicios } from "@/lib/redux/slices/serviciosSlice";
+
+const ITEMS_PER_PAGE = 10;
 
 export default function TurnosPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { turnos, loading } = useSelector((state: RootState) => state.turnos);
-  const { servicios } = useSelector((state: RootState) => state.servicios);
+  const { turnos } = useSelector((state: RootState) => state.turnos);
+
   const { mesas } = useSelector((state: RootState) => state.mesas);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -36,33 +41,13 @@ export default function TurnosPage() {
   const [showLlamarModal, setShowLlamarModal] = useState(false);
   const [selectedMesaId, setSelectedMesaId] = useState("");
   const [filtroEstado, setFiltroEstado] = useState<string>("");
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CreateTurnoFormData>({
-    resolver: zodResolver(createTurnoSchema),
-  });
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     dispatch(fetchTurnos());
     dispatch(fetchServicios());
     dispatch(fetchMesas());
   }, [dispatch]);
-
-  const onCreateTurno = async (data: CreateTurnoFormData) => {
-    await dispatch(
-      createTurno({
-        ...data,
-        prioridad: data.prioridad ?? false,
-      })
-    );
-    setShowCreateModal(false);
-    reset();
-    dispatch(fetchTurnos());
-  };
 
   const handleLlamarTurno = async () => {
     if (selectedTurno && selectedMesaId) {
@@ -86,9 +71,99 @@ export default function TurnosPage() {
     dispatch(fetchTurnos());
   };
 
+  // Ordenar turnos: en_espera y en_atencion primero, completados y cancelados al final
+  const sortedTurnos = useMemo(() => {
+    const turnosCopy = [...turnos];
+
+    return turnosCopy.sort((a, b) => {
+      // Criterio de orden de prioridad
+      const estadoPrioridad: Record<string, number> = {
+        en_espera: 1,
+        en_atencion: 2,
+        completado: 3,
+        cancelado: 4,
+      };
+
+      const prioridadA = estadoPrioridad[a.estado] || 5;
+      const prioridadB = estadoPrioridad[b.estado] || 5;
+
+      // Primero ordenar por estado
+      if (prioridadA !== prioridadB) {
+        return prioridadA - prioridadB;
+      }
+
+      // Dentro del mismo estado, más recientes primero
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+  }, [turnos]);
+
   const filteredTurnos = filtroEstado
-    ? turnos.filter((t) => t.estado === filtroEstado)
-    : turnos;
+    ? sortedTurnos.filter((t) => t.estado === filtroEstado)
+    : sortedTurnos;
+
+  // Cálculos de paginación
+  const totalPages = Math.ceil(filteredTurnos.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentTurnos = filteredTurnos.slice(startIndex, endIndex);
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePageClick = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleFiltroChange = (estado: string) => {
+    setFiltroEstado(estado);
+    setCurrentPage(1); // Reset a página 1 cuando cambia el filtro
+  };
+
+  // Generar array de números de página para mostrar
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    // Mostrar primeras páginas
+    if (currentPage <= 3) {
+      for (let i = 1; i <= 4; i++) {
+        pages.push(i);
+      }
+      pages.push("...");
+      pages.push(totalPages);
+    }
+    // Mostrar últimas páginas
+    else if (currentPage >= totalPages - 2) {
+      pages.push(1);
+      pages.push("...");
+      for (let i = totalPages - 3; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    }
+    // Mostrar páginas del medio
+    else {
+      pages.push(1);
+      pages.push("...");
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        pages.push(i);
+      }
+      pages.push("...");
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
 
   const getEstadoBadge = (estado: string) => {
     const badges: Record<string, { text: string; class: string }> = {
@@ -125,25 +200,25 @@ export default function TurnosPage() {
           <div className="flex gap-2">
             <Button
               variant={filtroEstado === "" ? "default" : "outline"}
-              onClick={() => setFiltroEstado("")}
+              onClick={() => handleFiltroChange("")}
             >
               Todos
             </Button>
             <Button
               variant={filtroEstado === "en_espera" ? "default" : "outline"}
-              onClick={() => setFiltroEstado("en_espera")}
+              onClick={() => handleFiltroChange("en_espera")}
             >
               En Espera
             </Button>
             <Button
               variant={filtroEstado === "en_atencion" ? "default" : "outline"}
-              onClick={() => setFiltroEstado("en_atencion")}
+              onClick={() => handleFiltroChange("en_atencion")}
             >
               En Atención
             </Button>
             <Button
               variant={filtroEstado === "completado" ? "default" : "outline"}
-              onClick={() => setFiltroEstado("completado")}
+              onClick={() => handleFiltroChange("completado")}
             >
               Completados
             </Button>
@@ -151,199 +226,173 @@ export default function TurnosPage() {
         </CardContent>
       </Card>
 
-      {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {filteredTurnos.map((turno) => {
-            const badge = getEstadoBadge(turno.estado);
-            return (
-              <Card
-                key={turno.id}
-                className="hover:shadow-md transition-shadow"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="h-16 w-16 rounded-lg flex items-center justify-center font-bold text-white text-lg"
-                        style={{ backgroundColor: turno.tipo_servicio?.color }}
-                      >
-                        {turno.codigo.split("-")[0]}
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold">{turno.codigo}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {turno.tipo_servicio?.nombre}
-                        </p>
-                        {turno.nombre_cliente && (
-                          <p className="text-sm flex items-center gap-1 mt-1">
-                            <User className="h-3 w-3" />
-                            {turno.nombre_cliente}
-                          </p>
-                        )}
-                      </div>
+      <div className="grid gap-4">
+        {currentTurnos.map((turno) => {
+          const badge = getEstadoBadge(turno.estado);
+          return (
+            <Card key={turno.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="h-16 w-16 rounded-lg flex items-center justify-center font-bold text-white text-lg"
+                      style={{ backgroundColor: turno.tipo_servicio?.color }}
+                    >
+                      {turno.codigo.split("-")[0]}
                     </div>
-
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.class}`}
-                        >
-                          {badge.text}
-                        </span>
-                        {turno.mesa && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {turno.mesa.nombre}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(turno.created_at).toLocaleString()}
+                    <div>
+                      <h3 className="text-xl font-bold">{turno.codigo}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {turno.tipo_servicio?.nombre}
+                      </p>
+                      {turno.nombre_cliente && (
+                        <p className="text-sm flex items-center gap-1 mt-1">
+                          <User className="h-3 w-3" />
+                          {turno.nombre_cliente}
                         </p>
-                      </div>
-
-                      <div className="flex gap-2">
-                        {turno.estado === "en_espera" && (
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedTurno(turno);
-                              setShowLlamarModal(true);
-                            }}
-                            className="flex items-center gap-1"
-                          >
-                            <Phone className="h-4 w-4" />
-                            Llamar
-                          </Button>
-                        )}
-                        {turno.estado === "en_atencion" && (
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => handleCompletarTurno(turno.id)}
-                            className="flex items-center gap-1 bg-green-600 hover:bg-green-700"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                            Completar
-                          </Button>
-                        )}
-                        {(turno.estado === "en_espera" ||
-                          turno.estado === "en_atencion") && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleCancelarTurno(turno.id)}
-                            className="flex items-center gap-1"
-                          >
-                            <XCircle className="h-4 w-4" />
-                            Cancelar
-                          </Button>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-          {filteredTurnos.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              No hay turnos para mostrar
+
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.class}`}
+                      >
+                        {badge.text}
+                      </span>
+                      {turno.mesa && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {turno.mesa.nombre}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(turno.created_at).toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      {turno.estado === "en_espera" && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setSelectedTurno(turno);
+                            setShowLlamarModal(true);
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          <Phone className="h-4 w-4" />
+                          Llamar
+                        </Button>
+                      )}
+                      {turno.estado === "en_atencion" && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => handleCompletarTurno(turno.id)}
+                          className="flex items-center gap-1 bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          Completar
+                        </Button>
+                      )}
+                      {(turno.estado === "en_espera" ||
+                        turno.estado === "en_atencion") && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleCancelarTurno(turno.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <XCircle className="h-4 w-4" />
+                          Cancelar
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+        {currentTurnos.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            No hay turnos para mostrar
+          </div>
+        )}
+      </div>
+
+      {/* Controles de Paginación */}
+      {totalPages > 1 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Mostrando {startIndex + 1}-
+                {Math.min(endIndex, filteredTurnos.length)} de{" "}
+                {filteredTurnos.length} turnos
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Button>
+
+                <div className="flex gap-1">
+                  {getPageNumbers().map((page, index) => {
+                    if (page === "...") {
+                      return (
+                        <span
+                          key={`ellipsis-${index}`}
+                          className="px-3 py-1 text-muted-foreground"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageClick(page as number)}
+                        className="min-w-[40px]"
+                      >
+                        {page}
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1"
+                >
+                  Siguiente
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          )}
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Modal Crear Turno */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle>Crear Nuevo Turno</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form
-                onSubmit={handleSubmit(onCreateTurno)}
-                className="space-y-4"
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="tipo_servicio_id">Tipo de Servicio *</Label>
-                  <select
-                    id="tipo_servicio_id"
-                    {...register("tipo_servicio_id")}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="">Seleccione un servicio</option>
-                    {servicios
-                      .filter((s) => s.activo)
-                      .map((servicio) => (
-                        <option key={servicio.id} value={servicio.id}>
-                          {servicio.nombre} ({servicio.codigo})
-                        </option>
-                      ))}
-                  </select>
-                  {errors.tipo_servicio_id && (
-                    <p className="text-sm text-destructive">
-                      {errors.tipo_servicio_id.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="nombre_cliente">
-                    Nombre del Cliente (Opcional)
-                  </Label>
-                  <Input
-                    id="nombre_cliente"
-                    {...register("nombre_cliente")}
-                    placeholder="Nombre completo"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="observaciones">
-                    Observaciones (Opcional)
-                  </Label>
-                  <textarea
-                    id="observaciones"
-                    {...register("observaciones")}
-                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    placeholder="Notas adicionales"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="prioridad"
-                    {...register("prioridad")}
-                    className="h-4 w-4"
-                  />
-                  <Label htmlFor="prioridad">Turno prioritario</Label>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button type="submit" className="flex-1">
-                    Crear Turno
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowCreateModal(false);
-                      reset();
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <CreateTurnoModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+      />
 
       {/* Modal Llamar Turno */}
       {showLlamarModal && selectedTurno && (

@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 import { api } from "@/services/api";
 import { Mesa, CreateMesaData, UpdateMesaData, ApiResponse } from "@/types";
 
@@ -16,14 +17,14 @@ const initialState: MesasState = {
 
 export const fetchMesas = createAsyncThunk(
   "mesas/fetchMesas",
-  async (params?: { activo?: boolean; estado?: string }, { rejectWithValue }) => {
+  async (
+    params: { activo?: boolean; estado?: string } | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      // Filtrar parámetros undefined para evitar errores 400
-      const cleanParams = params ? Object.fromEntries(
-        Object.entries(params).filter(([_, value]) => value !== undefined && value !== null && value !== '')
-      ) : {};
-      
-      const response = await api.get<ApiResponse<Mesa[]>>("/mesas", { params: cleanParams });
+      const response = await api.get<ApiResponse<Mesa[]>>("/mesas", {
+        params,
+      });
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
@@ -57,18 +58,43 @@ export const createMesa = createAsyncThunk(
 
 export const updateMesa = createAsyncThunk(
   "mesas/updateMesa",
-  async ({ id, data }: { id: string; data: UpdateMesaData }, { rejectWithValue }) => {
+  async (
+    { id, data }: { id: string; data: UpdateMesaData },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await api.put<ApiResponse<Mesa>>(`/mesas/${id}`, data);
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
-      return rejectWithValue(response.data.message || "Error al actualizar mesa");
+      return rejectWithValue(
+        response.data.message || "Error al actualizar mesa"
+      );
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message || "Error al actualizar mesa");
+      if (axios.isAxiosError(error) && error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message;
+
+        if (status === 409) {
+          return rejectWithValue("Este número de mesa ya está en uso");
+        } else if (status === 404) {
+          return rejectWithValue("Mesa no encontrada");
+        } else if (status === 400) {
+          return rejectWithValue(
+            message || "Los datos ingresados no son válidos"
+          );
+        } else if (message) {
+          return rejectWithValue(message);
+        }
       }
-      return rejectWithValue("Error al actualizar mesa");
+
+      if (error instanceof Error && error.message) {
+        return rejectWithValue(error.message);
+      }
+
+      return rejectWithValue(
+        "Error al actualizar la mesa. Por favor, inténtalo de nuevo"
+      );
     }
   }
 );

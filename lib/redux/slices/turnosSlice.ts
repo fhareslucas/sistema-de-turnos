@@ -24,15 +24,21 @@ const initialState: TurnosState = {
 
 export const fetchTurnos = createAsyncThunk(
   "turnos/fetchTurnos",
-  async (params?: { estado?: string; tipo_servicio_id?: string; fecha?: string; page?: number; limit?: number }, { rejectWithValue }) => {
+  async (
+    params:
+      | {
+          estado?: string;
+          tipo_servicio_id?: string;
+          fecha?: string;
+          page?: number;
+          limit?: number;
+        }
+      | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      // Filtrar parámetros undefined para evitar errores 400
-      const cleanParams = params ? Object.fromEntries(
-        Object.entries(params).filter(([_, value]) => value !== undefined && value !== null && value !== '')
-      ) : {};
-      
       const response = await api.get<ApiResponse<TurnosResponse>>("/turnos", {
-        params: cleanParams,
+        params,
       });
       if (response.data.success && response.data.data) {
         return response.data.data;
@@ -51,11 +57,15 @@ export const fetchEstadisticas = createAsyncThunk(
   "turnos/fetchEstadisticas",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get<ApiResponse<EstadisticasData>>("/turnos/estadisticas");
+      const response = await api.get<ApiResponse<EstadisticasData>>(
+        "/turnos/estadisticas"
+      );
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
-      return rejectWithValue(response.data.message || "Error al cargar estadísticas");
+      return rejectWithValue(
+        response.data.message || "Error al cargar estadísticas"
+      );
     } catch (error: unknown) {
       if (error instanceof Error) {
         return rejectWithValue(error.message || "Error al cargar estadísticas");
@@ -85,9 +95,15 @@ export const createTurno = createAsyncThunk(
 
 export const llamarTurno = createAsyncThunk(
   "turnos/llamarTurno",
-  async ({ id, data }: { id: string; data: { mesa_id: string } }, { rejectWithValue }) => {
+  async (
+    { id, data }: { id: string; data: { mesa_id: string } },
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await api.put<ApiResponse<Turno>>(`/turnos/${id}/llamar`, data);
+      const response = await api.put<ApiResponse<Turno>>(
+        `/turnos/${id}/llamar`,
+        data
+      );
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
@@ -103,15 +119,23 @@ export const llamarTurno = createAsyncThunk(
 
 export const completarTurno = createAsyncThunk(
   "turnos/completarTurno",
-  async ({ id, observaciones }: { id: string; observaciones?: string }, { rejectWithValue }) => {
+  async (
+    { id, observaciones }: { id: string; observaciones?: string },
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await api.put<ApiResponse<Turno>>(`/turnos/${id}/completar`, {
-        observaciones,
-      });
+      const response = await api.put<ApiResponse<Turno>>(
+        `/turnos/${id}/completar`,
+        {
+          observaciones,
+        }
+      );
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
-      return rejectWithValue(response.data.message || "Error al completar turno");
+      return rejectWithValue(
+        response.data.message || "Error al completar turno"
+      );
     } catch (error: unknown) {
       if (error instanceof Error) {
         return rejectWithValue(error.message || "Error al completar turno");
@@ -123,13 +147,21 @@ export const completarTurno = createAsyncThunk(
 
 export const cancelarTurno = createAsyncThunk(
   "turnos/cancelarTurno",
-  async ({ id, observaciones }: { id: string; observaciones?: string }, { rejectWithValue }) => {
+  async (
+    { id, observaciones }: { id: string; observaciones?: string },
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await api.put<ApiResponse<Turno>>(`/turnos/${id}/cancelar`, { observaciones });
+      const response = await api.put<ApiResponse<Turno>>(
+        `/turnos/${id}/cancelar`,
+        { observaciones }
+      );
       if (response.data.success && response.data.data) {
         return response.data.data;
       }
-      return rejectWithValue(response.data.message || "Error al cancelar turno");
+      return rejectWithValue(
+        response.data.message || "Error al cancelar turno"
+      );
     } catch (error: unknown) {
       if (error instanceof Error) {
         return rejectWithValue(error.message || "Error al cancelar turno");
