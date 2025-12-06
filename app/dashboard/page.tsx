@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/lib/redux/store";
 import { fetchEstadisticas, fetchTurnos } from "@/lib/redux/slices/turnosSlice";
+import { Turno } from "@/types";
 import {
   Card,
   CardContent,
@@ -15,13 +16,13 @@ import { Clock, CheckCircle2, AlertCircle, Users, User } from "lucide-react";
 
 export default function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { estadisticas, turnos} = useSelector(
+  const { estadisticas, turnos } = useSelector(
     (state: RootState) => state.turnos
   );
 
   useEffect(() => {
     dispatch(fetchEstadisticas());
-    dispatch(fetchTurnos()); 
+    dispatch(fetchTurnos());
   }, [dispatch]);
 
   const stats = [
@@ -58,6 +59,24 @@ export default function DashboardPage() {
   const turnosEnAtencion = turnos.filter((t) => t.estado === "en_atencion");
   const turnosEnEspera = turnos.filter((t) => t.estado === "en_espera");
 
+  const formatTime = (dateString: string | null | undefined) => {
+    if (!dateString) return "--";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "--";
+      return date.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "--";
+    }
+  };
+
+  const getTurnoDate = (turno: Turno) => {
+    return turno.createdAt || turno.created_at || turno.hora_llamado || "";
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -89,7 +108,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-
         <Card className="flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -144,9 +162,7 @@ export default function DashboardPage() {
                         </p>
                       )}
                       <p className="text-[10px] text-muted-foreground">
-                        {new Date(
-                          turno.hora_atencion || turno.created_at
-                        ).toLocaleTimeString()}
+                        {formatTime(turno.hora_atencion || getTurnoDate(turno))}
                       </p>
                     </div>
                   </div>
@@ -210,7 +226,7 @@ export default function DashboardPage() {
                         </span>
                       )}
                       <p className="text-[10px] text-muted-foreground">
-                        {new Date(turno.created_at).toLocaleTimeString()}
+                        {formatTime(getTurnoDate(turno))}
                       </p>
                     </div>
                   </div>

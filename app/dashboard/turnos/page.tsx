@@ -33,7 +33,6 @@ const ITEMS_PER_PAGE = 10;
 export default function TurnosPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { turnos } = useSelector((state: RootState) => state.turnos);
-
   const { mesas } = useSelector((state: RootState) => state.mesas);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -57,21 +56,21 @@ export default function TurnosPage() {
       setShowLlamarModal(false);
       setSelectedTurno(null);
       setSelectedMesaId("");
-      dispatch(fetchTurnos());
-      dispatch(fetchMesas());
+      // El turno ya se actualiza en el slice, no necesitas fetchTurnos
+      await dispatch(fetchMesas()); // Solo actualizamos mesas
     }
   };
 
   const handleCompletarTurno = async (id: string) => {
     await dispatch(completarTurno({ id }));
-    dispatch(fetchTurnos());
-    dispatch(fetchMesas());
+    // El turno ya se actualiza en el slice, no necesitas fetchTurnos
+    await dispatch(fetchMesas()); // Solo actualizamos mesas
   };
 
   const handleCancelarTurno = async (id: string) => {
     await dispatch(cancelarTurno({ id }));
-    dispatch(fetchTurnos());
-    dispatch(fetchMesas());
+    // El turno ya se actualiza en el slice, no necesitas fetchTurnos
+    await dispatch(fetchMesas()); // Solo actualizamos mesas
   };
 
   const sortedTurnos = useMemo(() => {
@@ -81,19 +80,29 @@ export default function TurnosPage() {
       const esActivoA = a.estado === "en_espera" || a.estado === "en_atencion";
       const esActivoB = b.estado === "en_espera" || b.estado === "en_atencion";
 
+      // Activos primero
       if (esActivoA && !esActivoB) return -1;
       if (!esActivoA && esActivoB) return 1;
 
+      // Entre activos: prioritarios primero
       if (esActivoA && esActivoB) {
-        if (a.prioridad && !b.prioridad) return -1;
-        if (!a.prioridad && b.prioridad) return 1;
-        if (a.estado === "en_atencion" && b.estado === "en_espera") return -1;
-        if (a.estado === "en_espera" && b.estado === "en_atencion") return 1;
+        const prioA = a.prioridad === true || a.prioridad === 1;
+        const prioB = b.prioridad === true || b.prioridad === 1;
+
+        if (prioA && !prioB) return -1;
+        if (!prioA && prioB) return 1;
+
+        // Si AMBOS son prioritarios, poner En Atención antes que En Espera
+        if (prioA && prioB) {
+          if (a.estado === "en_atencion" && b.estado === "en_espera") return -1;
+          if (a.estado === "en_espera" && b.estado === "en_atencion") return 1;
+        }
       }
 
-      return (
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+      // Más reciente primero
+      const fechaA = a.createdAt || a.created_at || "";
+      const fechaB = b.createdAt || b.created_at || "";
+      return new Date(fechaB).getTime() - new Date(fechaA).getTime();
     });
   }, [turnos]);
 
@@ -164,6 +173,23 @@ export default function TurnosPage() {
       cancelado: { text: "Cancelado", class: "bg-red-100 text-red-800" },
     };
     return badges[estado] || badges.en_espera;
+  };
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "--";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "--";
+      return date.toLocaleString(undefined, {
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "--";
+    }
   };
 
   return (
@@ -258,7 +284,12 @@ export default function TurnosPage() {
                         </p>
                       )}
                       <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(turno.created_at).toLocaleString()}
+                        {formatDate(
+                          turno.createdAt ||
+                            turno.created_at ||
+                            turno.hora_llamado ||
+                            turno.updated_at
+                        )}
                       </p>
                     </div>
 

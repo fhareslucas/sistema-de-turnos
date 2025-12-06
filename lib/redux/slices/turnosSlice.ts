@@ -210,7 +210,12 @@ const turnosSlice = createSlice({
       })
       .addCase(createTurno.fulfilled, (state, action) => {
         state.loading = false;
-        state.turnos.unshift(action.payload);
+        const turno = {
+          ...action.payload,
+          created_at: action.payload.created_at || new Date().toISOString(),
+          updated_at: action.payload.updated_at || new Date().toISOString(),
+        };
+        state.turnos.unshift(turno);
       })
       .addCase(createTurno.rejected, (state, action) => {
         state.loading = false;

@@ -9,6 +9,8 @@ import {
   Armchair,
   Menu,
   ChevronLeft,
+  Monitor,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -68,9 +70,19 @@ export default function Sidebar() {
       href: "/dashboard/turnos",
     },
     {
-      icon: Armchair, 
+      icon: Armchair,
       label: "Mesas",
       href: "/dashboard/mesas",
+    },
+    {
+      icon: Monitor,
+      label: "Pantalla Atención",
+      href: "/dashboard/pantalla-atencion",
+    },
+    {
+      icon: Clock,
+      label: "Pantalla Espera",
+      href: "/dashboard/pantalla-espera",
     },
   ];
 
