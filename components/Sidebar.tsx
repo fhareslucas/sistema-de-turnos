@@ -79,11 +79,6 @@ export default function Sidebar() {
       label: "Pantalla Atención",
       href: "/dashboard/pantalla-atencion",
     },
-    {
-      icon: Clock,
-      label: "Pantalla Espera",
-      href: "/dashboard/pantalla-espera",
-    },
   ];
 
   return (

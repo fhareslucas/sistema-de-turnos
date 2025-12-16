@@ -21,7 +21,6 @@ export interface AuthResponse {
     user: User;
   };
 }
-
 export interface TipoServicio {
   id: string;
   nombre: string;

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTextToSpeech } from "@/hooks/useTextToSpeech";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/lib/redux/store";
@@ -51,6 +53,7 @@ export default function CreateTurnoModal({
   });
 
   const prioridad = watch("prioridad");
+  const { speak } = useTextToSpeech();
 
   useEffect(() => {
     if (open) {
@@ -75,12 +78,20 @@ export default function CreateTurnoModal({
           selectedMesaId &&
           availableMesas.some((m) => m.id === selectedMesaId)
         ) {
+          const mesa = availableMesas.find((m) => m.id === selectedMesaId);
           await dispatch(
             llamarTurno({
               id: newTurno.id,
               data: { mesa_id: selectedMesaId },
             })
           );
+
+          // Anunciar voz
+          const clienteText = data.nombre_cliente
+            ? `para ${data.nombre_cliente}`
+            : "";
+          const mesaText = mesa ? `en mesa ${mesa.numero}` : "";
+          speak(`Turno ${clienteText}, por favor pase ${mesaText}`);
         }
 
         dispatch(fetchTurnos());

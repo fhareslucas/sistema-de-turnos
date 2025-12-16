@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistema de Turnos
 
-## Getting Started
+Un sistema moderno y eficiente para la gestión de turnos, colas y atención al cliente, construido con las últimas tecnologías web.
 
-First, run the development server:
+## 🚀 Características
+
+- **Gestión de Turnos**: Creación, administración y seguimiento de turnos en tiempo real.
+- **Pantallas de Visualización**:
+  - **Pantalla de Espera**: Interfaz optimizada para mostrar a los clientes su posición en la cola.
+  - **Pantalla de Atención**: Interfaz clara para el llamado de turnos actuales.
+- **Gestión de Mesas**: Administración de mesas y puestos de atención disponibles.
+- **Servicios**: Configuración y gestión de los diferentes tipos de servicios ofrecidos.
+- **Dashboard Administrativo**: Panel de control centralizado para la gestión operativa.
+- **Autenticación**: Sistema de acceso seguro para administradores y operadores.
+
+## 🛠️ Tecnologías
+
+Este proyecto utiliza un stack tecnológico moderno y robusto:
+
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+- **Lenguaje**: [TypeScript](https://www.typescriptlang.org/)
+- **UI/Estilos**:
+  - [Tailwind CSS](https://tailwindcss.com/) - Framework de utilidades CSS.
+  - [Radix UI](https://www.radix-ui.com/) - Primitivas de componentes accesibles.
+  - [Lucide React](https://lucide.dev/) - Iconografía consistente.
+- **Estado Global**: [Redux Toolkit](https://redux-toolkit.js.org/) - Gestión eficiente del estado de la aplicación.
+- **Formularios & Validación**:
+  - [React Hook Form](https://react-hook-form.com/) - Manejo de formularios performante.
+  - [Zod](https://zod.dev/) - Validación de esquemas TypeScript-first.
+- **Cliente HTTP**: [Axios](https://axios-http.com/) - Cliente de promesas para el navegador y node.js.
+
+## 📋 Requisitos Previos
+
+- **Node.js**: Versión 18 o superior (LTS recomendada).
+- **Gestor de paquetes**: npm, yarn, pnpm o bun.
+
+## 🔧 Instalación
+
+1. **Clonar el repositorio**
+
+```bash
+git clone <url-del-repositorio>
+cd sistema-de-turnos
+```
+
+2. **Instalar dependencias**
+
+```bash
+npm install
+# o
+yarn install
+# o
+pnpm install
+```
+
+3. **Configurar variables de entorno**
+
+Crea un archivo `.env` en la raíz del proyecto para configurar las variables necesarias, como la URL del backend.
+
+Ejemplo:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+```
+
+## ⚡ Ejecución
+
+Para iniciar el servidor de desarrollo:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver la aplicación.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📂 Estructura del Proyecto
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+La estructura principal del proyecto sigue las convenciones de Next.js App Router:
 
-## Learn More
+- `/app`: Contiene las rutas y páginas de la aplicación.
+  - `/dashboard`: Módulos principales (mesas, turnos, pantallas, servicios).
+  - `/auth`: Páginas de autenticación (login).
+- `/components`: Componentes de UI reutilizables y modulares.
+- `/lib`: Utilidades, configuración de Redux (slices, store), y esquemas de validación.
+- `/services`: Capa de servicios para la comunicación con la API externa.
+- `/types`: Definiciones de tipos globales y compartidos.
+- `/hooks`: Custom hooks de React.
 
-To learn more about Next.js, take a look at the following resources:
+## 🤝 Contribución
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Las contribuciones son bienvenidas. Por favor, abre un issue para discutir cambios mayores o envía un pull request con tus mejoras.

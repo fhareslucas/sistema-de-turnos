@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
+import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 
 import { AppDispatch, RootState } from "@/lib/redux/store";
 import {
@@ -24,10 +26,12 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  Printer,
 } from "lucide-react";
 import { Turno } from "@/types";
 import { fetchServicios } from "@/lib/redux/slices/serviciosSlice";
-
+import { useReactToPrint } from "react-to-print";
+import { TicketTurno } from "@/components/TicketTurno";
 const ITEMS_PER_PAGE = 10;
 
 export default function TurnosPage() {
@@ -41,6 +45,22 @@ export default function TurnosPage() {
   const [selectedMesaId, setSelectedMesaId] = useState("");
   const [filtroEstado, setFiltroEstado] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [turnoToPrint, setTurnoToPrint] = useState<Turno | null>(null);
+
+  const componentRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: componentRef,
+    onAfterPrint: () => setTurnoToPrint(null),
+  });
+
+  const { speak } = useTextToSpeech();
+
+  useEffect(() => {
+    if (turnoToPrint) {
+      handlePrint();
+    }
+  }, [turnoToPrint, handlePrint]);
 
   useEffect(() => {
     dispatch(fetchTurnos());
@@ -53,24 +73,32 @@ export default function TurnosPage() {
       await dispatch(
         llamarTurno({ id: selectedTurno.id, data: { mesa_id: selectedMesaId } })
       );
+
+      const mesa = mesas.find((m) => m.id === selectedMesaId);
+      const clienteText = selectedTurno.nombre_cliente
+        ? `para ${selectedTurno.nombre_cliente}`
+        : "";
+      const mesaText = mesa ? `en mesa ${mesa.numero}` : "";
+
+      speak(
+        `Turno ${clienteText}, por favor pase ${mesaText}`
+      );
+
       setShowLlamarModal(false);
       setSelectedTurno(null);
       setSelectedMesaId("");
-      // El turno ya se actualiza en el slice, no necesitas fetchTurnos
-      await dispatch(fetchMesas()); // Solo actualizamos mesas
+      await dispatch(fetchMesas());
     }
   };
 
   const handleCompletarTurno = async (id: string) => {
     await dispatch(completarTurno({ id }));
-    // El turno ya se actualiza en el slice, no necesitas fetchTurnos
-    await dispatch(fetchMesas()); // Solo actualizamos mesas
+    await dispatch(fetchMesas());
   };
 
   const handleCancelarTurno = async (id: string) => {
     await dispatch(cancelarTurno({ id }));
-    // El turno ya se actualiza en el slice, no necesitas fetchTurnos
-    await dispatch(fetchMesas()); // Solo actualizamos mesas
+    await dispatch(fetchMesas());
   };
 
   const sortedTurnos = useMemo(() => {
@@ -80,11 +108,9 @@ export default function TurnosPage() {
       const esActivoA = a.estado === "en_espera" || a.estado === "en_atencion";
       const esActivoB = b.estado === "en_espera" || b.estado === "en_atencion";
 
-      // Activos primero
       if (esActivoA && !esActivoB) return -1;
       if (!esActivoA && esActivoB) return 1;
 
-      // Entre activos: prioritarios primero
       if (esActivoA && esActivoB) {
         const prioA = a.prioridad === true || a.prioridad === 1;
         const prioB = b.prioridad === true || b.prioridad === 1;
@@ -92,14 +118,12 @@ export default function TurnosPage() {
         if (prioA && !prioB) return -1;
         if (!prioA && prioB) return 1;
 
-        // Si AMBOS son prioritarios, poner En Atención antes que En Espera
         if (prioA && prioB) {
           if (a.estado === "en_atencion" && b.estado === "en_espera") return -1;
           if (a.estado === "en_espera" && b.estado === "en_atencion") return 1;
         }
       }
 
-      // Más reciente primero
       const fechaA = a.createdAt || a.created_at || "";
       const fechaB = b.createdAt || b.created_at || "";
       return new Date(fechaB).getTime() - new Date(fechaA).getTime();
@@ -293,7 +317,7 @@ export default function TurnosPage() {
                       </p>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                       {turno.estado === "en_espera" && (
                         <Button
                           size="sm"
@@ -301,22 +325,34 @@ export default function TurnosPage() {
                             setSelectedTurno(turno);
                             setShowLlamarModal(true);
                           }}
-                          className="flex items-center gap-1"
+                          className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           <Phone className="h-4 w-4" />
                           Llamar
                         </Button>
                       )}
                       {turno.estado === "en_atencion" && (
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={() => handleCompletarTurno(turno.id)}
-                          className="flex items-center gap-1 bg-green-600 hover:bg-green-700"
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                          Completar
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => {
+                              handleCompletarTurno(turno.id);
+                            }}
+                            className="flex relative left-10 items-center gap-1 bg-green-600 hover:bg-green-700"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            Completar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => setTurnoToPrint(turno)}
+                            className="relative bottom-12 left-26 gap-1 bg-gray-600 hover:bg-gray-700"
+                          >
+                            <Printer className="h-4 w-4" />
+                          </Button>
+                        </>
                       )}
                       {(turno.estado === "en_espera" ||
                         turno.estado === "en_atencion") && (
@@ -476,6 +512,11 @@ export default function TurnosPage() {
           </Card>
         </div>
       )}
+      <div style={{ display: "none" }}>
+        {turnoToPrint && (
+          <TicketTurno ref={componentRef} turno={turnoToPrint} />
+        )}
+      </div>
     </div>
   );
 }
