@@ -114,7 +114,7 @@ export default function CreateTurnoModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-primary text-xl font-bold">
+          <CardTitle className="text-[#aec235] text-xl font-bold">
             Crear Nuevo Turno
           </CardTitle>
         </CardHeader>

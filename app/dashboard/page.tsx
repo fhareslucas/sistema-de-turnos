@@ -80,7 +80,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <h2 className="text-3xl font-bold tracking-tight text-[#aec235]">Dashboard</h2>
         <p className="text-muted-foreground">
           Vista general del sistema de turnos
         </p>

@@ -26,7 +26,7 @@ export default function MesaCard({
       className={cn(
         "relative overflow-hidden rounded-xl border transition-all duration-200",
         isAvailable
-          ? "bg-green-50 border-green-200 hover:shadow-md hover:border-green-300"
+          ? "bg-customGreen/10 border-customGreen/30 hover:shadow-md hover:border-customGreen/50"
           : "bg-yellow-50 border-yellow-200 opacity-90",
         isSelected && "ring-2 ring-primary ring-offset-2"
       )}
@@ -58,7 +58,7 @@ export default function MesaCard({
           className={cn(
             "h-16 w-16 rounded-full flex items-center justify-center",
             isAvailable
-              ? "bg-green-100 text-green-700"
+              ? "bg-customGreen/20 text-customGreen-900"
               : "bg-yellow-100 text-yellow-700"
           )}
         >
@@ -74,7 +74,7 @@ export default function MesaCard({
           <p
             className={cn(
               "text-sm font-medium",
-              isAvailable ? "text-green-600" : "text-yellow-600"
+              isAvailable ? "text-customGreen-600 font-bold" : "text-yellow-600"
             )}
           >
             {isAvailable ? "Disponible" : "Ocupada"}

@@ -51,10 +51,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700 p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-3xl font-bold text-center text-primary">
+          <CardTitle className="text-3xl font-bold text-center text-blue-500 ">
             Sistema de Turnos
           </CardTitle>
           <CardDescription className="text-center">
@@ -99,17 +99,15 @@ export default function LoginPage() {
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              variant="default"
+              className="w-full"
+              disabled={loading}
+            >
               {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </Button>
           </form>
-
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Credenciales por defecto:</p>
-            <p className="font-mono text-xs mt-1">
-              admin@sistema.com / admin123
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

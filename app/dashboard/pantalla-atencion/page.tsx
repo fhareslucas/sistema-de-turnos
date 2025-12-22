@@ -40,9 +40,9 @@ export default function PantallaAtencionPage() {
     <PantallaLayout title="Pantalla de Turnos">
       <div className="h-full w-full flex flex-col md:flex-row bg-slate-50 overflow-hidden">
         {/* SECCIÓN EN ATENCIÓN (50%) */}
-        <div className="flex-1 p-4 border-r border-slate-200 overflow-y-auto no-scrollbar flex flex-col gap-4 bg-slate-100/50">
-          <div className="sticky top-0 bg-slate-100/95 backdrop-blur-sm z-10 py-3 border-b border-blue-200 mb-2">
-            <h2 className="text-2xl font-bold text-blue-700 text-center uppercase tracking-widest flex items-center justify-center gap-2">
+        <div className="flex-1 p-4 border-r border-slate-200 overflow-y-auto no-scrollbar flex flex-col gap-4 bg-slate-50">
+          <div className="sticky top-0 bg-slate-50/95 backdrop-blur-sm z-10 py-3 border-b border-blue-200 mb-2">
+            <h2 className="text-2xl font-bold text-customGreen text-center uppercase tracking-widest flex items-center justify-center gap-2">
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-600"></span>
@@ -53,7 +53,7 @@ export default function PantallaAtencionPage() {
 
           <div className="flex flex-col gap-3">
             {turnosEnAtencion.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50">
+              <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-300 rounded-xl bg-white">
                 <p className="text-lg text-slate-400 font-medium">
                   Esperando llamados...
                 </p>
@@ -77,12 +77,12 @@ export default function PantallaAtencionPage() {
                     </div>
 
                     {/* Mesa */}
-                    <div className="w-[60%] flex flex-col justify-center items-center p-2 bg-blue-50/30">
-                      <p className="text-blue-600 font-semibold uppercase text-xs tracking-wider mb-1">
+                    <div className="w-[60%] flex flex-col justify-center items-center p-2 bg-blue-100/30">
+                      <p className="text-blue-500 font-semibold uppercase text-xs tracking-wider mb-1">
                         Pasar A
                       </p>
                       <div className="text-center leading-none w-full px-2">
-                        <span className="block text-3xl font-bold text-blue-900 whitespace-nowrap overflow-hidden text-ellipsis">
+                        <span className="block text-3xl font-bold text-blue-600 whitespace-nowrap overflow-hidden text-ellipsis">
                           {turno.mesa
                             ? `Mesa ${turno.mesa.numero}`
                             : "Recepción"}
@@ -102,9 +102,9 @@ export default function PantallaAtencionPage() {
         </div>
 
         {/* SECCIÓN EN ESPERA (50%) */}
-        <div className="flex-1 p-4 overflow-y-auto no-scrollbar flex flex-col gap-4 bg-slate-100/50">
-          <div className="sticky top-0 bg-slate-100/95 backdrop-blur-sm z-10 py-3 border-b border-yellow-200 mb-2">
-            <h2 className="text-2xl font-bold text-yellow-700 text-center uppercase tracking-widest flex items-center justify-center gap-2">
+        <div className="flex-1 p-4 overflow-y-auto no-scrollbar flex flex-col gap-4 bg-slate-50">
+          <div className="sticky top-0 bg-slate-50/95 backdrop-blur-sm z-10 py-3 border-b border-yellow-200 mb-2">
+            <h2 className="text-2xl font-bold text-customGreen text-center uppercase tracking-widest flex items-center justify-center gap-2">
               <span className="relative flex h-3 w-3">
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
               </span>
@@ -114,7 +114,7 @@ export default function PantallaAtencionPage() {
 
           <div className="flex flex-col gap-3">
             {turnosEnEspera.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50">
+              <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-300 rounded-xl bg-white">
                 <p className="text-lg text-slate-400 font-medium">
                   No hay espera
                 </p>

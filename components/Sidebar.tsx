@@ -10,7 +10,6 @@ import {
   Menu,
   ChevronLeft,
   Monitor,
-  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -35,17 +34,29 @@ const SidebarItem = ({
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 group",
+        "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 group relative",
         isActive
-          ? "bg-primary-foreground/10 text-primary-foreground"
-          : "text-primary-foreground/70 hover:bg-primary-foreground/5 hover:text-primary-foreground",
+          ? "bg-white/10 text-white shadow-sm"
+          : "text-white/70 hover:bg-white/5 hover:text-white",
         isCollapsed ? "justify-center" : ""
       )}
       title={isCollapsed ? label : undefined}
     >
-      <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-white" : "")} />
+      {isActive && (
+        <div className="absolute left-0 top-1 bottom-1 w-1 bg-[#aec235] rounded-r-full" />
+      )}
+      <Icon
+        className={cn("h-5 w-5 shrink-0", isActive ? "text-[#aec235]" : "")}
+      />
       {!isCollapsed && (
-        <span className="truncate font-medium text-sm">{label}</span>
+        <span
+          className={cn(
+            "truncate font-medium text-sm",
+            isActive ? "text-white" : ""
+          )}
+        >
+          {label}
+        </span>
       )}
     </Link>
   );
@@ -91,16 +102,16 @@ export default function Sidebar() {
       <div className="h-16 flex items-center justify-between px-4">
         {!isCollapsed && (
           <div className="flex items-center gap-2 overflow-hidden">
-            <div className="h-14 w-14 rounded flex items-center justify-center shrink-0 bg-white">
+            <div className="h-14 w-14 rounded flex items-center mt-2 justify-center shrink-0 bg-white">
               <Image
-                src="/logo.webp"
+                src="/RS.png"
                 alt="Sistema Turnos Logo"
                 width={56}
                 height={56}
                 className="object-contain"
               />
             </div>
-            <span className="font-bold text-white truncate">
+            <span className="font-bold text-[#aec235] truncate">
               Sistema Turnos
             </span>
           </div>
@@ -110,7 +121,7 @@ export default function Sidebar() {
           size="icon"
           onClick={toggleSidebar}
           className={cn(
-            "text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8",
+            "text-white hover:bg-white/10 h-8 w-8",
             isCollapsed ? "mx-auto" : ""
           )}
         >

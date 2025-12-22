@@ -60,7 +60,6 @@ export default function AddMesaModal({
       const resultAction = await dispatch(createMesa(data));
 
       if (createMesa.fulfilled.match(resultAction)) {
-  
         await dispatch(fetchMesas({ activo: true }));
 
         setSuccessMessage("Mesa creada exitosamente");
@@ -69,7 +68,6 @@ export default function AddMesaModal({
           handleClose();
         }, 1000);
       } else {
-        
         const errorMessage = resultAction.payload as string;
         setBackendError(errorMessage || "Error al crear la mesa");
       }
@@ -98,7 +96,7 @@ export default function AddMesaModal({
             )}
 
             {successMessage && (
-              <div className="bg-green-50 text-green-700 px-4 py-3 rounded-md text-sm">
+              <div className="bg-green-100 text-green-700 px-4 py-3 rounded-md text-sm">
                 {successMessage}
               </div>
             )}

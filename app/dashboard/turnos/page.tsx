@@ -80,9 +80,7 @@ export default function TurnosPage() {
         : "";
       const mesaText = mesa ? `en mesa ${mesa.numero}` : "";
 
-      speak(
-        `Turno ${clienteText}, por favor pase ${mesaText}`
-      );
+      speak(`Turno ${clienteText}, por favor pase ${mesaText}`);
 
       setShowLlamarModal(false);
       setSelectedTurno(null);
@@ -192,8 +190,14 @@ export default function TurnosPage() {
   const getEstadoBadge = (estado: string) => {
     const badges: Record<string, { text: string; class: string }> = {
       en_espera: { text: "En Espera", class: "bg-yellow-100 text-yellow-800" },
-      en_atencion: { text: "En Atención", class: "bg-blue-100 text-blue-800" },
-      completado: { text: "Completado", class: "bg-green-100 text-green-800" },
+      en_atencion: {
+        text: "En Atención",
+        class: "bg-primary text-white shadow-sm",
+      },
+      completado: {
+        text: "Completado",
+        class: "bg-customGreen text-white shadow-sm",
+      },
       cancelado: { text: "Cancelado", class: "bg-red-100 text-red-800" },
     };
     return badges[estado] || badges.en_espera;
@@ -220,7 +224,7 @@ export default function TurnosPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">
+          <h2 className="text-3xl font-bold tracking-tight text-[#aec235]">
             Gestión de Turnos
           </h2>
           <p className="text-muted-foreground">
@@ -229,7 +233,7 @@ export default function TurnosPage() {
         </div>
         <Button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-primary text-white hover:bg-primary/90"
         >
           <Plus className="h-4 w-4" />
           Nuevo Turno
@@ -339,7 +343,7 @@ export default function TurnosPage() {
                             onClick={() => {
                               handleCompletarTurno(turno.id);
                             }}
-                            className="flex relative left-10 items-center gap-1 bg-green-600 hover:bg-green-700"
+                            className="flex relative left-10 items-center gap-1 bg-green-500 hover:bg-green-600 text-white"
                           >
                             <CheckCircle className="h-4 w-4" />
                             Completar

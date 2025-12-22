@@ -70,8 +70,8 @@ export const TicketTurno = React.forwardRef<HTMLDivElement, TicketTurnoProps>(
             </div>
           </div>
 
-          <div className="text-center w-full border-t border-gray-300 pt-4 mt-auto">
-            <p className="text-xs text-gray-400">
+          <div className="text-center w-full border-t border-slate-300 pt-4 mt-auto">
+            <p className="text-xs text-slate-400">
               ¡Gracias por esperar!
               <br />
               Por favor, esté atento a la pantalla.

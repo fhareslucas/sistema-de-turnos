@@ -116,7 +116,7 @@ export default function EditMesaModal({
             )}
 
             {successMessage && (
-              <div className="bg-green-50 text-green-700 px-4 py-3 rounded-md text-sm">
+              <div className="bg-green-100 text-green-700 px-4 py-3 rounded-md text-sm">
                 {successMessage}
               </div>
             )}

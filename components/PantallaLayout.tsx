@@ -68,7 +68,7 @@ export default function PantallaLayout({
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
       <div className="flex items-center justify-between p-4 border-b bg-card">
-        <h1 className="text-2xl font-bold">{title}</h1>
+        <h1 className="text-2xl font-bold text-[#aec235]">{title}</h1>
         <Button onClick={toggleFullscreen} variant="outline" className="gap-2">
           <Maximize2 className="h-4 w-4" />
           Pantalla Completa
